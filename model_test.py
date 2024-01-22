@@ -89,19 +89,7 @@ def generate_one_data(drain_volt):
 
     return data, label, axis_name, volt
 
-data1, label1, axis_name1, volt1 = generate_one_data(0.05)
-data2, label2, axis_name2, volt2 = generate_one_data(0.7)
-data = np.concatenate((data1, data2), axis=0)
-
-label1 = list(label1)
-label2 = list(label2)
-for i in range(len(label1)):
-    label1[i] = 'Linear Volt'+str(label1[i])
-for i in range(len(label2)):
-    label2[i] = 'Saturation Volt'+str(label2[i])
-label = label1 + label2
-
-volt = volt1.copy()
+######################################################################
 
 class Model(nn.Module):
     def __init__(self):
@@ -129,28 +117,42 @@ class Model(nn.Module):
 model = torch.load(r'model.pt')
 
 normal_data = np.load(r'normal_data.npy')
-data = np.load(r'data.npy')
+origin_data = np.load(r'data.npy')
+origin_label = np.load(r'label.npy')
 
 max_label = np.load(r'max_label.npy')
 min_label = np.load(r'min_label.npy')
 
-data_index = 0
-
-print(normal_data[data_index].shape)
+data_index = 105
 
 predict_paramter = model(torch.FloatTensor(np.array([normal_data[data_index]])))
 predict_paramter = predict_paramter.detach().numpy()
 predict_paramter = predict_paramter*(max_label-min_label) + min_label
 predict_paramter = predict_paramter[0] / 1e+9
 
+print(origin_label[data_index] / 1e+9)
+print(predict_paramter)
+
 HspiceSSH.parameter_change(*predict_paramter)
-res = HspiceSSH.get_hspice_data()
-res, _ = one_data_extract(res)
 
-volt = volt / 1e+9
+data1, label1, axis_name1, volt1 = generate_one_data(0.05)
+data2, label2, axis_name2, volt2 = generate_one_data(0.7)
+data = np.concatenate((data1, data2), axis=0)
 
-for i in range(len(res)):
-    plt.subplt(2, 3, i+1)
-    plt.plot(volt, res[i, :])
-    plt.plot(volt, data[i, :], '--')
+label1 = list(label1)
+label2 = list(label2)
+for i in range(len(axis_name1)):
+    label1[i] = 'Linear Volt: '+ str(axis_name1[i]) + ' ' + str(label1[i] / 1e+9)
+for i in range(len(axis_name2)):
+    label2[i] = 'Saturation Volt: '+str(axis_name2[i]) + ' ' + str(label2[i] / 1e+9)
+label = label1 + label2
+
+volt = volt1.copy() / 1e+9
+
+plt.figure(figsize=(18, 12))
+for i in range(len(data)):
+    plt.subplot(2, 3, i+1)
+    plt.plot(volt, data[i, :])
+    plt.plot(volt, origin_data[data_index, i, :], '--')
     plt.title(label[i])
+plt.show()
