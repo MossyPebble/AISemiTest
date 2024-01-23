@@ -95,9 +95,9 @@ for i, j in enumerate(data):
 # 위 예시에서는 줄이 3개지만, 데이터에 따라 늘어나거나 줄어들 수 있다.
 # 이를 csv로 저장한다. data는 현재 3차원 리스트이므로, 이를 2차원 리스트로 각각 분리해 저장한다.
 with open('result.csv', 'w', newline='') as f:
-   writer = csv.writer(f)
    for i in data:
-      writer.writerow(i)
+      writer = csv.writer(f)
+      writer.writerows(i)
       f.write('\n')
 
 # index를 저장한다.
