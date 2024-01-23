@@ -1,5 +1,6 @@
 import SSHManager
 import hspice_data_preprocessing
+import json
 
 def get_server_info_from_txt(path):
 
@@ -22,91 +23,41 @@ class HSPICE_SSH(SSHManager.SSHManager):
 
     """SSHManager를 이용해 HSPICE 작동을 더 손쉽게 하기 위해 만든 클래스."""
 
-    model_file_path:str
     sp_file_path:str
+    workspace_path:str
+
+    def __init__(self, host:str=None, port:int=None, username:str=None, password:str=None):
+
+        with open('settings.json', 'r') as f:
+            settings = json.load(f)
+        
+        if host is None and port is None and username is None and password is None:
+            super().__init__(*settings["default_server_info"].values())
+            print("settings.json에 기록된 기본 서버 정보로 접속합니다.")
+        else:
+            super().__init__(host, port, username, password)
+        
+        try:
+            self.sp_file_path = settings["default_sp_file_path"]
+            self.workspace_path = settings["default_server_workspace_path"]
+        except:
+            pass
     
-    def get_hspice_data(self):
+    def get_hspice_data(self, local_path:str=None):
 
         """
         HSPICE를 작동 시킨 후 데이터를 읽어와 반환한다.
+        path가 None이면 서버에서 넘어온 데이터를 반환하고, path가 None이 아니면 해당 경로에 데이터를 저장한다.
+
+        Args:
+            local_path (str): 데이터를 저장할 경로
 
         Returns:
-            data (numpy.ndarray): 데이터
-            label (numpy.ndarray): 데이터의 라벨
+            str: HSPICE의 실행 결과
         """
 
-        data = self.send_command(f'hspice {self.sp_file_path}')
-        return hspice_data_preprocessing.data_extract(data)
-    
-    def repeat_count_change(self, repeat_count):
-
-        """
-        HSPICE를 작동시킬 때, monte carlo 횟수를 변경한다.
-
-        Args:
-            repeat_count (int): 반복 횟수
-        """
-
-        r = open('count.txt', 'r')
-        record = r.read()
-        self.change_file_content(self.sp_file_path, f'monte={record}', f'monte={repeat_count}')
-        r.close()
-        r = open('count.txt', 'w')
-        r.write(str(repeat_count))
-        r.close()
-
-    def seed_change(self, seed):
-
-        """
-        HSPICE를 작동시킬 때, seed를 변경한다.
-
-        Args:
-            seed (int): seed
-        """
-
-        r = open('seed.txt', 'r')
-        record = r.read()
-        self.change_file_content(self.sp_file_path, f'seed={record}', f'seed={seed}')
-        r.close()
-        r = open('seed.txt', 'w')
-        r.write(str(seed))
-        r.close()
-
-    def drain_volt_change(self, volt):
-
-        """
-        HSPICE를 작동시킬 때, seed를 변경한다.
-
-        Args:
-            seed (int): seed
-        """
-
-        r = open('drain_volt.txt', 'r')
-        record = r.read()
-        self.change_file_content(self.sp_file_path, f'd gnd {record}', f'd gnd {volt}')
-        r.close()
-        r = open('drain_volt.txt', 'w')
-        r.write(str(volt))
-        r.close()   
-
-    def parameter_change(self, *value):
-
-        """
-        HSPICE를 작동시킬 때, 파라미터를 변경한다.
-        """
-
-        r = open('parameter.txt', 'r')
-        record = r.readlines()
-        if len(record) != len(value):
-            raise ValueError('The number of parameters and values does not match.')
-        for i in range(len(record)):
-            record[i] = record[i].strip().split(',')
-        r.close()
-        
-        content=''
-        for i in range(len(record)):
-            content += f'{record[i][0]},{value[i]}\n'
-            self.change_file_content(self.sp_file_path, f'{record[i][0]}_change={record[i][1]}', f'{record[i][0]}_change={value[i]}')
-        w = open('parameter.txt', 'w')
-        w.write(content)
-        w.close()
+        if local_path is None:
+            return self.send_command(f'hspice {self.sp_file_path}')
+        else:
+            self.send_command(f'hspice {self.sp_file_path} > {self.workspace_path}/result.txt')
+            self.get_file(f'{self.workspace_path}/result.txt', local_path)
