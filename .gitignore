@@ -3,3 +3,4 @@ BSIM4_manual.pdf
 temp.py
 settings.json
 __pycache__
+.gitignore
