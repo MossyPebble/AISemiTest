@@ -1,5 +1,7 @@
 from HSPICE_SSH import HSPICE_SSH
 import os, re, csv
+import numpy as np
+from hspice_data_preprocessing import unit_remove
 
 def slice_list(data:list, from_element:str, to_element:str):
     
@@ -78,3 +80,20 @@ with open('index.csv', 'w', newline='') as f:
    writer = csv.writer(f)
    writer.writerow(index)
    f.write('\n')
+
+# # data에 저장된 str형식의 원소들을 float형식으로 변환한다. 이 과정에서 각 원소의 단위가 없어진다.
+# # 부동소수점 문제를 해결하기 위해 모든 원소에 1e+9를 곱한다.
+# for i, j in enumerate(data):
+#    data[i] = j[3:]
+# for i, j in enumerate(data):
+#    for k, l in enumerate(j):
+#       for m, n in enumerate(l):
+#          data[i][k][m] = float(unit_remove(n))
+
+# #위 두 저장을 numpy 형식으로 저장한다.
+# data = np.array(data, dtype=np.float64)
+# index = np.array(index, dtype=int)
+
+# print(data.shape, index.shape)
+# np.save('result.npy', data)
+# np.save('index.npy', np.array(index, dtype=int))

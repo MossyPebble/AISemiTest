@@ -9,22 +9,22 @@ def unit_remove(data, bias=1e+9):
 
     if 'm' in data:
         data = data.replace('m', ' ')
-        data = float(data) * 1e-3 * bias
+        data = float(data) * (1e-3 * bias)
     elif 'n' in data:
         data = data.replace('n', ' ')
-        data = float(data) * 1e-9 * bias
+        data = float(data) * (1e-9 * bias)
     elif 'u' in data:
         data = data.replace('u', ' ')
-        data = float(data) * 1e-6 * bias
+        data = float(data) * (1e-6 * bias)
     elif 'a' in data:
         data = data.replace('a', ' ')
-        data = float(data) * 1e-18 * bias
+        data = float(data) * (1e-18 * bias)
     elif 'p' in data:
         data = data.replace('p', ' ')
-        data = float(data) * 1e-12 * bias
+        data = float(data) * (1e-12 * bias)
     elif 'f' in data:
         data = data.replace('f', ' ')
-        data = float(data) * 1e-15 * bias
+        data = float(data) * (1e-15 * bias)
     else:
         data = float(data) * bias
     return data
